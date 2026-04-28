@@ -61,12 +61,12 @@ ui <- page_sidebar(
   # --- Main panel ---
   layout_columns(
     col_widths = 12,
+    min_height = "1200px", # sets height of the rows
 
     card(
-      height = "950px",
       full_screen = TRUE,
       card_header("Map"),
-      leafletOutput("map", height = "100%")
+      leafletOutput("map") # can add height = "1000px" but normally not needed if using full_screen = TRUE
     ),
 
     card(
