@@ -1,0 +1,19 @@
+# Environment variables — never commit real values
+.Renviron
+
+# Google service account JSON file (if stored locally inside the project)
+*.json
+
+# renv cache and library — keep renv/ but not the local library
+renv/library/
+renv/staging/
+renv/sandbox/
+
+# R session artifacts
+.Rhistory
+.RData
+.Ruserdata
+
+# OS
+.DS_Store
+Thumbs.db

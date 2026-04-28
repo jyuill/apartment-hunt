@@ -1,0 +1,9 @@
+# Google Sheet ID (used when no URL is pasted in the app UI)
+SHEET_ID=your_sheet_id_here
+
+# Service account JSON — either a file path or the raw JSON string contents
+# File path example:
+#   GCP_SA_JSON=/Users/you/.config/gcp/apartment-hunt-sa.json
+# Raw JSON string example (Connect Cloud):
+#   GCP_SA_JSON={"type":"service_account","project_id":"..."}
+GCP_SA_JSON=
