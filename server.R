@@ -72,6 +72,11 @@ server <- function(input, output, session) {
     if (isTRUE(input$filter_gym))       df <- df |> filter(Gym        == TRUE)
     if (isTRUE(input$filter_amenities)) df <- df |> filter(Amenities  == TRUE)
 
+    # Type filter
+    if (length(input$type_filter) > 0) {
+      df <- df |> filter(tolower(trimws(Type)) %in% tolower(input$type_filter))
+    }
+
     df
   })
 
@@ -81,6 +86,11 @@ server <- function(input, output, session) {
     updateSelectInput(session, "status_filter",
                       choices  = statuses,
                       selected = intersect(c("tour", "open", "msg"), statuses))
+
+    types <- sort(unique(tolower(trimws(apt_data()$Type))))
+    updateSelectInput(session, "type_filter",
+                      choices  = types,
+                      selected = types)
   })
 
   # ── Map ──────────────────────────────────────────────────────────────────────

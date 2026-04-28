@@ -29,7 +29,7 @@ ui <- page_sidebar(
         "size_col",
         "Marker size:",
         choices = c("Rent" = "Rent", "Total Cost" = "Ttl_Cost"),
-        selected = "Rent",
+        selected = "Ttl_Cost",
         inline = TRUE
       )
     ),
@@ -42,6 +42,13 @@ ui <- page_sidebar(
         "Status:",
         choices  = c("denied", "tour", "open", "unavail", "reject", "msg"),
         selected = c("tour", "open", "msg"),
+        multiple = TRUE
+      ),
+      selectInput(
+        "type_filter",
+        "Type:",
+        choices  = c("studio", "1 bdrm"),
+        selected = c("studio", "1 bdrm"),
         multiple = TRUE
       ),
       checkboxInput("filter_parking", "Parking / EV only", value = FALSE),
