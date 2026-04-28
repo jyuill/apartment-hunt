@@ -24,7 +24,20 @@ fetch_sheet <- function(sheet_id) {
   gs4_auth_sa()
 
   # Headers are at row 8; read from row 8 onward
-  df <- read_sheet(sheet_id, range = "8:10000", col_types = "c")
+  sheet_name <- Sys.getenv("SHEET_NAME", unset = NA)
+  range_spec  <- if (!is.na(sheet_name) && nchar(sheet_name) > 0) {
+    googlesheets4::cell_limits(
+      ul = c(8, 1), lr = c(NA, NA), sheet = sheet_name
+    )
+  } else {
+    "8:10000"
+  }
+  df <- read_sheet(sheet_id, range = range_spec, col_types = "c")
+
+  # Drop rows where Address is blank — these are empty trailing rows
+  if ("Address" %in% names(df)) {
+    df <- df[!is.na(df$Address) & nchar(trimws(df$Address)) > 0, ]
+  }
 
   # Coerce known numeric columns, stripping currency formatting if present
   for (col in c("Rent", "Ttl_Cost")) {

@@ -17,7 +17,9 @@ geocode_writeback <- function(df, sheet_id) {
     stop("Sheet must contain 'lat' and 'lng' columns.")
   }
 
-  needs_geocode <- is.na(df$lat) | df$lat == ""
+  # Only attempt geocoding on rows that have an address
+  has_address    <- !is.na(df$Address) & nchar(trimws(df$Address)) > 0
+  needs_geocode  <- has_address & (is.na(df$lat) | df$lat == "")
 
   if (!any(needs_geocode)) {
     message("No new addresses to geocode.")
@@ -45,6 +47,10 @@ geocode_writeback <- function(df, sheet_id) {
   df$lat[needs_geocode] <- to_geocode$lat_new
   df$lng[needs_geocode] <- to_geocode$lng_new
 
+  # Ensure numeric type (mixing NA and numeric via indexing can produce character)
+  df$lat <- as.numeric(df$lat)
+  df$lng <- as.numeric(df$lng)
+
   # Write the full lat/lng columns back to the sheet
   # Determine column letters for lat and lng
   col_names  <- names(df)
@@ -54,15 +60,20 @@ geocode_writeback <- function(df, sheet_id) {
   lat_range  <- gs4_range_col(lat_col, nrow(df))
   lng_range  <- gs4_range_col(lng_col, nrow(df))
 
+  sheet_name <- Sys.getenv("SHEET_NAME", unset = NA)
+  sheet_arg  <- if (!is.na(sheet_name) && nchar(sheet_name) > 0) sheet_name else NULL
+
   range_write(sheet_id,
               data      = data.frame(lat = df$lat),
               range     = lat_range,
+              sheet     = sheet_arg,
               col_names = FALSE,
               reformat  = FALSE)
 
   range_write(sheet_id,
               data      = data.frame(lng = df$lng),
               range     = lng_range,
+              sheet     = sheet_arg,
               col_names = FALSE,
               reformat  = FALSE)
 

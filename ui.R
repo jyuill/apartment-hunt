@@ -40,8 +40,8 @@ ui <- page_sidebar(
       selectInput(
         "status_filter",
         "Status:",
-        choices  = c("denied", "tour", "open", "unavail", "reject", "msg"),
-        selected = c("tour", "open", "msg"),
+        choices  = c("denied", "tour", "open", "ref", "unavail", "reject", "msg"),
+        selected = c("tour", "open", "msg", "ref"),
         multiple = TRUE
       ),
       selectInput(
@@ -63,9 +63,10 @@ ui <- page_sidebar(
     col_widths = 12,
 
     card(
+      height = "950px",
       full_screen = TRUE,
       card_header("Map"),
-      leafletOutput("map", height = "500px")
+      leafletOutput("map", height = "100%")
     ),
 
     card(

@@ -50,7 +50,14 @@ server <- function(input, output, session) {
     withProgress(message = "Loading sheet...", value = 0.2, {
       df <- fetch_sheet(sheet_id())
       setProgress(0.5, message = "Geocoding new addresses...")
-      df <- geocode_writeback(df, sheet_id())
+      df <- tryCatch(
+        geocode_writeback(df, sheet_id()),
+        error = function(e) {
+          showNotification(paste("Geocoding error:", conditionMessage(e)),
+                           type = "warning", duration = 10)
+          df  # return df without geocoded coords rather than crashing
+        }
+      )
       setProgress(1, message = "Done")
       df
     })
@@ -59,7 +66,7 @@ server <- function(input, output, session) {
   # ── Filtered data ────────────────────────────────────────────────────────────
   filtered_data <- reactive({
     df <- apt_data()
-    req(nrow(df) > 0)
+    if (is.null(df) || nrow(df) == 0) return(df)
 
     # Status filter
     if (length(input$status_filter) > 0) {
@@ -85,7 +92,7 @@ server <- function(input, output, session) {
     statuses <- sort(unique(tolower(apt_data()$Status)))
     updateSelectInput(session, "status_filter",
                       choices  = statuses,
-                      selected = intersect(c("tour", "open", "msg"), statuses))
+                      selected = intersect(c("tour", "open", "msg", "ref"), statuses))
 
     types <- sort(unique(tolower(trimws(apt_data()$Type))))
     updateSelectInput(session, "type_filter",
@@ -95,9 +102,7 @@ server <- function(input, output, session) {
 
   # ── Map ──────────────────────────────────────────────────────────────────────
   output$map <- renderLeaflet({
-    df <- filtered_data()
-    req(nrow(df) > 0)
-    build_map(df, size_col = input$size_col)
+    build_map(filtered_data(), size_col = input$size_col)
   })
 
   # ── Table ────────────────────────────────────────────────────────────────────
