@@ -19,13 +19,14 @@ TYPE_STROKE <- list(
   "other"  = list(fill_opacity = 0.85, weight = 1)
 )
 
-build_map <- function(df, size_col = "Ttl_Cost") {
+build_map <- function(df, size_col = "Ttl_Cost", color_col = "Status") {
 
   if (is.null(df) || nrow(df) == 0) {
     return(leaflet() |> addTiles() |>
              setView(lng = -123.1207, lat = 49.2827, zoom = 12))
   }
-  if (is.null(size_col) || !size_col %in% names(df)) size_col <- "Ttl_Cost"
+  if (is.null(size_col)  || !size_col  %in% names(df)) size_col  <- "Ttl_Cost"
+  if (is.null(color_col) || !color_col %in% names(df)) color_col <- "Status"
 
   df <- df[!is.na(df$lat) & !is.na(df$lng), ]
   if (nrow(df) == 0) {
@@ -35,13 +36,38 @@ build_map <- function(df, size_col = "Ttl_Cost") {
 
   n <- nrow(df)
 
-  # Colour from Status
-  status_norm <- tolower(trimws(df$Status))
-  status_norm[!status_norm %in% names(STATUS_PALETTE)] <- "other"
-  status_pal <- colorFactor(unname(STATUS_PALETTE),
-                             levels   = names(STATUS_PALETTE),
-                             na.color = STATUS_PALETTE[["other"]])
-  marker_col <- as.character(status_pal(status_norm))
+  # Colour: Status (categorical) or value_cost (continuous, lower = better = green)
+  if (color_col == "Value_Cost") {
+    vc_raw <- as.numeric(df$Value_Cost)
+    vc_domain <- range(vc_raw, na.rm = TRUE)
+    # Fall back to Status colouring if no valid values
+    if (any(!is.finite(vc_domain))) color_col <- "Status"
+  }
+
+  if (color_col == "Value_Cost") {
+    med_vc <- median(vc_raw, na.rm = TRUE)
+    vc <- ifelse(is.na(vc_raw), med_vc, vc_raw)
+    vc_pal <- colorNumeric(
+      palette = c("#4CAF50", "#FF9800", "#F44336"),  # green → amber → red
+      domain  = vc_domain,
+      na.color = "#9E9E9E"
+    )
+    marker_col   <- unname(as.character(vc_pal(vc)))
+    legend_pal   <- vc_pal
+    legend_vals  <- vc_domain
+    legend_title <- "Value-Cost"
+  } else {
+    status_norm <- tolower(trimws(df$Status))
+    status_norm[!status_norm %in% names(STATUS_PALETTE)] <- "other"
+    status_pal <- colorFactor(unname(STATUS_PALETTE),
+                               levels   = names(STATUS_PALETTE),
+                               na.color = STATUS_PALETTE[["other"]])
+    marker_col  <- unname(as.character(status_pal(status_norm)))
+    legend_type <- "factor"
+    legend_pal  <- status_pal
+    legend_vals <- factor(status_norm, levels = names(STATUS_PALETTE))
+    legend_title <- "Status"
+  }
 
   # Shape from Type using explicit loop to avoid named vectors from sapply
   type_norm <- tolower(trimws(df$Type))
@@ -60,7 +86,7 @@ build_map <- function(df, size_col = "Ttl_Cost") {
 
   # Popups
   popup_cols <- intersect(
-    c("Apartment", "Status", "Type", "Rent", "Ttl_Cost",
+    c("Apartment", "Status", "Type", "Rent", "Ttl_Cost", "Value_Cost",
       "Parking_EV", "Laundry", "Gym", "Storage"),
     names(df)
   )
@@ -103,9 +129,9 @@ build_map <- function(df, size_col = "Ttl_Cost") {
     ) |>
     addLegend(
       position = "bottomright",
-      colors   = unname(STATUS_PALETTE),
-      labels   = names(STATUS_PALETTE),
-      title    = "Status",
+      pal      = legend_pal,
+      values   = legend_vals,
+      title    = legend_title,
       opacity  = 0.9
     ) |>
     addControl(html = type_legend_html, position = "bottomleft")

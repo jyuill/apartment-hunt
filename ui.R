@@ -4,7 +4,7 @@ library(leaflet)
 library(DT)
 
 ui <- page_sidebar(
-  title = "Apartment Hunt",
+  title = "Apartment Hunter",
   theme = bs_theme(bootswatch = "flatly"),
 
   sidebar = sidebar(
@@ -26,6 +26,13 @@ ui <- page_sidebar(
     card(
       card_header("Map Encoding"),
       radioButtons(
+        "color_col",
+        "Marker colour:",
+        choices = c("Status" = "Status", "Value-Cost" = "Value_Cost"),
+        selected = "Status",
+        inline = TRUE
+      ),
+      radioButtons(
         "size_col",
         "Marker size:",
         choices = c("Rent" = "Rent", "Total Cost" = "Ttl_Cost"),
@@ -41,7 +48,7 @@ ui <- page_sidebar(
         "status_filter",
         "Status:",
         choices  = c("denied", "tour", "open", "ref", "unavail", "reject", "msg"),
-        selected = c("tour", "open", "msg", "ref"),
+        selected = c("tour", "open", "msg"),
         multiple = TRUE
       ),
       selectInput(
@@ -51,10 +58,19 @@ ui <- page_sidebar(
         selected = c("studio", "1 bdrm"),
         multiple = TRUE
       ),
-      checkboxInput("filter_parking", "Parking / EV only", value = FALSE),
-      checkboxInput("filter_laundry", "Laundry only",      value = FALSE),
-      checkboxInput("filter_gym",     "Gym only",          value = FALSE),
-      checkboxInput("filter_amenities", "Amenities only",  value = FALSE)
+      sliderInput(
+        "cost_filter",
+        "Total Cost ($):",
+        min   = 0,
+        max   = 5000,
+        value = c(0, 5000),
+        step  = 100,
+        pre   = "$"
+      ),
+      checkboxInput("filter_parking", "Parking / EV", value = FALSE),
+      checkboxInput("filter_laundry", "Laundry",      value = FALSE),
+      checkboxInput("filter_gym",     "Gym",          value = FALSE),
+      checkboxInput("filter_amenities", "Amenities",  value = FALSE)
     )
   ),
 

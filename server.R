@@ -8,8 +8,8 @@ source("R/geocode_writeback.R")
 source("R/build_map.R")
 
 # Columns shown in the summary table
-TABLE_COLS <- c("Apartment", "Status", "Rent", "Ttl_Cost",
-                "Parking_EV", "Laundry", "Gym", "Storage")
+TABLE_COLS <- c("Apartment", "Status", "Rent", "Ttl_Cost", "Value_Cost",
+                "Parking_EV", "Laundry", "Gym", "Storage", "Amenities")
 
 server <- function(input, output, session) {
 
@@ -79,6 +79,13 @@ server <- function(input, output, session) {
     if (isTRUE(input$filter_gym))       df <- df |> filter(Gym        == TRUE)
     if (isTRUE(input$filter_amenities)) df <- df |> filter(Amenities  == TRUE)
 
+    # Total cost filter
+    if (!is.null(input$cost_filter)) {
+      df <- df |> filter(
+        is.na(Ttl_Cost) | (Ttl_Cost >= input$cost_filter[1] & Ttl_Cost <= input$cost_filter[2])
+      )
+    }
+
     # Type filter
     if (length(input$type_filter) > 0) {
       df <- df |> filter(tolower(trimws(Type)) %in% tolower(input$type_filter))
@@ -92,28 +99,56 @@ server <- function(input, output, session) {
     statuses <- sort(unique(tolower(apt_data()$Status)))
     updateSelectInput(session, "status_filter",
                       choices  = statuses,
-                      selected = intersect(c("tour", "open", "msg", "ref"), statuses))
+                      selected = intersect(c("tour", "open", "msg"), statuses))
 
     types <- sort(unique(tolower(trimws(apt_data()$Type))))
     updateSelectInput(session, "type_filter",
                       choices  = types,
                       selected = types)
+
+    cost_vals <- as.numeric(apt_data()$Ttl_Cost)
+    cost_vals <- cost_vals[!is.na(cost_vals)]
+    if (length(cost_vals) > 0) {
+      cmin <- floor(min(cost_vals) / 100) * 100
+      cmax <- ceiling(max(cost_vals) / 100) * 100
+      updateSliderInput(session, "cost_filter",
+                        min   = cmin, max = cmax,
+                        value = c(cmin, cmax))
+    }
   })
 
   # ── Map ──────────────────────────────────────────────────────────────────────
   output$map <- renderLeaflet({
-    build_map(filtered_data(), size_col = input$size_col)
+    build_map(filtered_data(), size_col = input$size_col, color_col = input$color_col)
   })
 
   # ── Table ────────────────────────────────────────────────────────────────────
   output$table <- renderDT({
     df <- filtered_data()
     cols <- intersect(TABLE_COLS, names(df))
+    df_tbl <- df[, cols, drop = FALSE]
+    bool_cols <- intersect(c("Parking_EV", "Laundry", "Gym", "Storage", "Amenities"), cols)
+    for (col in bool_cols) {
+      df_tbl[[col]] <- ifelse(df_tbl[[col]], "\u2713", "\u2717")
+    }
+    curr_cols <- intersect(c("Rent", "Ttl_Cost", "Value_Cost"), cols)
+    for (col in curr_cols) {
+      df_tbl[[col]] <- paste0("$", formatC(as.numeric(df_tbl[[col]]), format = "f", digits = 0, big.mark = ","))
+    }
+    bool_col_indices <- which(cols %in% bool_cols) - 1  # 0-based for JS
+    curr_col_indices <- which(cols %in% curr_cols) - 1
     datatable(
-      df[, cols, drop = FALSE],
+      df_tbl,
       rownames  = FALSE,
-      filter    = "top",
-      options   = list(pageLength = 15, scrollX = TRUE)
+      filter    = "none",
+      options   = list(
+        pageLength  = 20,
+        scrollX     = TRUE,
+        columnDefs  = list(
+          list(className = "dt-center", targets = bool_col_indices),
+          list(className = "dt-right",  targets = curr_col_indices)
+        )
+      )
     )
   })
 }
