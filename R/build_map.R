@@ -19,7 +19,13 @@ TYPE_STROKE <- list(
   "other"  = list(fill_opacity = 0.85, weight = 1)
 )
 
-build_map <- function(df, size_col = "Ttl_Cost", color_col = "Status") {
+# Muted grey/dark palette for Essentials service types
+ESSENTIALS_PALETTE <- c(
+  "#2C2C2C", "#5C5C5C", "#8C8C8C", "#3D3D3D",
+  "#6B6B6B", "#4A4A4A", "#7A7A7A", "#1A1A1A"
+)
+
+build_map <- function(df, size_col = "Ttl_Cost", color_col = "Status", essentials = NULL) {
 
   if (is.null(df) || nrow(df) == 0) {
     return(leaflet() |> addTiles() |>
@@ -109,7 +115,7 @@ build_map <- function(df, size_col = "Ttl_Cost", color_col = "Status") {
     "</div>"
   )
 
-  leaflet(df) |>
+  m <- leaflet(df) |>
     addProviderTiles(providers$CartoDB.Positron) |>
     fitBounds(
       lng1 = min(df$lng) - 0.01, lat1 = min(df$lat) - 0.01,
@@ -135,4 +141,46 @@ build_map <- function(df, size_col = "Ttl_Cost", color_col = "Status") {
       opacity  = 0.9
     ) |>
     addControl(html = type_legend_html, position = "bottomleft")
+
+  # Essentials overlay
+  if (!is.null(essentials) && nrow(essentials) > 0) {
+    ess <- essentials[!is.na(essentials$lat) & !is.na(essentials$lng), ]
+    if (nrow(ess) > 0) {
+      svcs    <- sort(unique(trimws(ess$Service)))
+      n_svcs  <- length(svcs)
+      pal_colours <- ESSENTIALS_PALETTE[seq_len(min(n_svcs, length(ESSENTIALS_PALETTE)))]
+      if (n_svcs > length(ESSENTIALS_PALETTE)) {
+        pal_colours <- rep_len(ESSENTIALS_PALETTE, n_svcs)
+      }
+      ess_pal <- colorFactor(pal_colours, levels = svcs, na.color = "#AAAAAA")
+      ess_col <- unname(as.character(ess_pal(trimws(ess$Service))))
+      ess_popup <- paste0(
+        "<b>", ess$Name, "</b><br>",
+        "<i>", ess$Service, "</i><br>",
+        "<small>", ess$Address, "</small>"
+      )
+      m <- m |>
+        addCircleMarkers(
+          data        = ess,
+          lng         = ~lng,
+          lat         = ~lat,
+          radius      = 3,
+          color       = ess_col,
+          fillColor   = ess_col,
+          fillOpacity = 0.8,
+          opacity     = 1,
+          weight      = 1,
+          popup       = ess_popup
+        ) |>
+        addLegend(
+          position = "topright",
+          pal      = ess_pal,
+          values   = factor(trimws(ess$Service), levels = svcs),
+          title    = "Essentials",
+          opacity  = 0.9
+        )
+    }
+  }
+
+  m
 }

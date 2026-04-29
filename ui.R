@@ -71,6 +71,17 @@ ui <- page_sidebar(
       checkboxInput("filter_laundry", "Laundry",      value = FALSE),
       checkboxInput("filter_gym",     "Gym",          value = FALSE),
       checkboxInput("filter_amenities", "Amenities",  value = FALSE)
+    ),
+
+    # --- Essentials overlay ---
+    card(
+      card_header("Essentials"),
+      checkboxGroupInput(
+        "essentials_filter",
+        label = NULL,
+        choices  = character(0),
+        selected = character(0)
+      )
     )
   ),
 

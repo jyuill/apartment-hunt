@@ -5,6 +5,8 @@ library(dplyr)
 
 source("R/fetch_sheet.R")
 source("R/geocode_writeback.R")
+source("R/fetch_essentials.R")
+source("R/geocode_essentials.R")
 source("R/build_map.R")
 
 # Columns shown in the summary table
@@ -63,6 +65,30 @@ server <- function(input, output, session) {
     })
   }, ignoreNULL = FALSE)
 
+  # ── Fetch + geocode Essentials (same reload trigger) ─────────────────────────
+  essentials_data <- eventReactive(input$reload, {
+    req(sheet_id())
+    tryCatch({
+      df <- fetch_essentials(sheet_id())
+      if (is.null(df) || nrow(df) == 0) {
+        showNotification("Essentials sheet loaded but has no rows.", type = "warning")
+        return(NULL)
+      }
+      tryCatch(
+        geocode_essentials(df, sheet_id()),
+        error = function(e) {
+          showNotification(paste("Essentials geocoding error:", conditionMessage(e)),
+                           type = "warning", duration = 15)
+          df
+        }
+      )
+    }, error = function(e) {
+      showNotification(paste("Could not load Essentials sheet:", conditionMessage(e)),
+                       type = "warning", duration = 15)
+      NULL
+    })
+  }, ignoreNULL = FALSE)
+
   # ── Filtered data ────────────────────────────────────────────────────────────
   filtered_data <- reactive({
     df <- apt_data()
@@ -117,9 +143,29 @@ server <- function(input, output, session) {
     }
   })
 
+  observeEvent(essentials_data(), {
+    df <- essentials_data()
+    if (is.null(df) || nrow(df) == 0) {
+      updateCheckboxGroupInput(session, "essentials_filter",
+                               choices = character(0), selected = character(0))
+      return()
+    }
+    svcs <- sort(unique(trimws(df$Service)))
+    updateCheckboxGroupInput(session, "essentials_filter",
+                             choices  = svcs,
+                             selected = svcs)
+  }, ignoreNULL = FALSE)
+
   # ── Map ──────────────────────────────────────────────────────────────────────
   output$map <- renderLeaflet({
-    build_map(filtered_data(), size_col = input$size_col, color_col = input$color_col)
+    ess <- essentials_data()
+    if (!is.null(ess) && nrow(ess) > 0 && length(input$essentials_filter) > 0) {
+      ess <- ess[trimws(ess$Service) %in% input$essentials_filter, ]
+    } else {
+      ess <- NULL
+    }
+    build_map(filtered_data(), size_col = input$size_col, color_col = input$color_col,
+              essentials = ess)
   })
 
   # ── Table ────────────────────────────────────────────────────────────────────
