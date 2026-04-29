@@ -19,10 +19,17 @@ TYPE_STROKE <- list(
   "other"  = list(fill_opacity = 0.85, weight = 1)
 )
 
-# Muted grey/dark palette for Essentials service types
+# Named palette for Essentials service types — add entries as new types appear
 ESSENTIALS_PALETTE <- c(
-  "#2C2C2C", "#5C5C5C", "#8C8C8C", "#3D3D3D",
-  "#6B6B6B", "#4A4A4A", "#7A7A7A", "#1A1A1A"
+  "grocery"    = "#1A1A1A",   # near-black
+  "gym"        = "#AAAAAA",   # light grey
+  "transit"    = "#4A4A4A",   # mid-dark grey
+  "pharmacy"   = "#6B6B6B",   # mid grey
+  "café"       = "#3D3D3D",
+  "cafe"       = "#3D3D3D",
+  "restaurant" = "#5C5C5C",
+  "park"       = "#7A7A7A",
+  "other"      = "#8C8C8C"
 )
 
 build_map <- function(df, size_col = "Ttl_Cost", color_col = "Status", essentials = NULL) {
@@ -147,12 +154,14 @@ build_map <- function(df, size_col = "Ttl_Cost", color_col = "Status", essential
     ess <- essentials[!is.na(essentials$lat) & !is.na(essentials$lng), ]
     if (nrow(ess) > 0) {
       svcs    <- sort(unique(trimws(ess$Service)))
-      n_svcs  <- length(svcs)
-      pal_colours <- ESSENTIALS_PALETTE[seq_len(min(n_svcs, length(ESSENTIALS_PALETTE)))]
-      if (n_svcs > length(ESSENTIALS_PALETTE)) {
-        pal_colours <- rep_len(ESSENTIALS_PALETTE, n_svcs)
-      }
-      ess_pal <- colorFactor(pal_colours, levels = svcs, na.color = "#AAAAAA")
+      # Map each service to a colour, falling back to "other" for unknowns
+      svc_norm <- tolower(trimws(ess$Service))
+      pal_colours <- vapply(svcs, function(s) {
+        key <- tolower(s)
+        if (key %in% names(ESSENTIALS_PALETTE)) ESSENTIALS_PALETTE[[key]]
+        else ESSENTIALS_PALETTE[["other"]]
+      }, character(1))
+      ess_pal <- colorFactor(unname(pal_colours), levels = svcs, na.color = "#AAAAAA")
       ess_col <- unname(as.character(ess_pal(trimws(ess$Service))))
       ess_popup <- paste0(
         "<b>", ess$Name, "</b><br>",
