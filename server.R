@@ -191,7 +191,21 @@ server <- function(input, output, session) {
         paste0("<span title='", gsub("'", "&#39;", full), "'>", full, "</span>")
       )
     }
-    if ("Apartment" %in% cols) df_tbl[["Apartment"]] <- truncate_col(df_tbl, "Apartment", 30)
+    if ("Apartment" %in% cols) {
+      full_apt  <- ifelse(is.na(df_tbl[["Apartment"]]), "", df_tbl[["Apartment"]])
+      has_link  <- "Link" %in% names(df) & !is.na(df[["Link"]]) & nchar(trimws(df[["Link"]])) > 0
+      link_vals <- if ("Link" %in% names(df)) df[["Link"]] else rep(NA_character_, nrow(df_tbl))
+      truncated <- ifelse(
+        nchar(full_apt) > 25,
+        paste0(substr(full_apt, 1, 25), "&hellip;"),
+        full_apt
+      )
+      df_tbl[["Apartment"]] <- ifelse(
+        !is.na(link_vals) & nchar(trimws(link_vals)) > 0,
+        paste0("<a href='", link_vals, "' target='_blank' title='", gsub("'", "&#39;", full_apt), "'>", truncated, "</a>"),
+        paste0("<span title='", gsub("'", "&#39;", full_apt), "'>", truncated, "</span>")
+      )
+    }
     if ("Notes"     %in% cols) df_tbl[["Notes"]]     <- truncate_col(df_tbl, "Notes",     20)
     bool_col_indices <- which(cols %in% bool_cols) - 1  # 0-based for JS
     curr_col_indices <- which(cols %in% curr_cols) - 1

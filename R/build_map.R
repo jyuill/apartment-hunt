@@ -7,6 +7,8 @@ STATUS_PALETTE <- c(
   "tour"    = "#4CAF50",
   "msg"     = "#FF9800",
   "ref"     = "#00BCD4",
+  "applied" = "#9C27B0",
+  "decide"  = "#FF5722",
   "unavail" = "#9E9E9E",
   "denied"  = "#F44336",
   "reject"  = "#B71C1C",
