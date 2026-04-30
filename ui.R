@@ -63,7 +63,7 @@ ui <- page_sidebar(
         "status_filter",
         "Status:",
         choices  = c("denied", "tour", "open", "ref", "unavail", "reject", "msg"),
-        selected = c("tour", "open", "msg"),
+        selected = c("tour", "open", "msg","applied","decide"),
         multiple = TRUE
       ),
       selectInput(

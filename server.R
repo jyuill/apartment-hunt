@@ -125,7 +125,7 @@ server <- function(input, output, session) {
     statuses <- sort(unique(tolower(apt_data()$Status)))
     updateSelectInput(session, "status_filter",
                       choices  = statuses,
-                      selected = intersect(c("tour", "open", "msg"), statuses))
+                      selected = intersect(c("tour", "open", "msg","applied","decide"), statuses))
 
     types <- sort(unique(tolower(trimws(apt_data()$Type))))
     updateSelectInput(session, "type_filter",
