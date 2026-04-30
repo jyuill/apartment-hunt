@@ -4,15 +4,30 @@ library(leaflet)
 library(DT)
 
 ui <- page_sidebar(
-  title = "Apartment Hunter",
-  theme = bs_theme(bootswatch = "flatly"),
-
+  title = tagList(
+    tags$span(
+      style = "display:flex; align-items:center; gap:0.4em; font-size:1.6rem; font-weight:700; line-height:1.2;",
+      icon("house", style = "width:1.3em; height:1.3em;"),
+      "APARTMENT HUNTER"
+    )
+  ),
+  theme = bs_theme(
+    bootswatch = "litera",
+    primary    = "#2C7BB6",   # teal-blue — complements the map palette
+    secondary  = "#6C757D"
+  ),
+  tags$head(tags$style(HTML("
+    .navbar { min-height: 72px !important; padding-top: 0.6rem !important; padding-bottom: 0.6rem !important; }
+    .navbar .navbar-brand, .navbar .navbar-brand * { font-size: 1.6rem !important; line-height: 1.2 !important; }
+    .navbar-brand svg { width: 1.4em !important; height: 1.4em !important; vertical-align: middle !important; }
+  "))),
   sidebar = sidebar(
     width = 280,
+    bg = "#f4f7fa",           # faint blue-grey sidebar background
 
     # --- Sheet connection ---
     card(
-      card_header("Google Sheet"),
+      card_header("Google Sheet", class = "bg-light fw-semibold"),
       textInput(
         "sheet_url",
         label = NULL,
@@ -24,7 +39,7 @@ ui <- page_sidebar(
 
     # --- Map encoding ---
     card(
-      card_header("Map Encoding"),
+      card_header("Map Encoding", class = "bg-light fw-semibold"),
       radioButtons(
         "color_col",
         "Marker colour:",
@@ -43,7 +58,7 @@ ui <- page_sidebar(
 
     # --- Filters ---
     card(
-      card_header("Filters"),
+      card_header("Filters", class = "bg-light fw-semibold"),
       selectInput(
         "status_filter",
         "Status:",
@@ -75,7 +90,7 @@ ui <- page_sidebar(
 
     # --- Essentials overlay ---
     card(
-      card_header("Essentials"),
+      card_header("Essentials", class = "bg-light fw-semibold"),
       checkboxGroupInput(
         "essentials_filter",
         label = NULL,
@@ -88,16 +103,16 @@ ui <- page_sidebar(
   # --- Main panel ---
   layout_columns(
     col_widths = 12,
-    min_height = "1200px", # sets height of the rows
+    min_height = "1200px",
 
     card(
       full_screen = TRUE,
-      card_header("Map"),
-      leafletOutput("map") # can add height = "1000px" but normally not needed if using full_screen = TRUE
+      card_header("Map", class = "bg-primary text-white"),
+      leafletOutput("map")
     ),
 
     card(
-      card_header("Listings"),
+      card_header("Listings", class = "bg-primary text-white"),
       DTOutput("table")
     )
   )

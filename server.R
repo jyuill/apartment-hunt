@@ -181,16 +181,18 @@ server <- function(input, output, session) {
     for (col in curr_cols) {
       df_tbl[[col]] <- paste0("$", formatC(as.numeric(df_tbl[[col]]), format = "f", digits = 0, big.mark = ","))
     }
-    # Truncate Notes to 20 chars; full text shown on hover via HTML title attribute
-    if ("Notes" %in% cols) {
-      full_notes <- ifelse(is.na(df_tbl[["Notes"]]), "", df_tbl[["Notes"]])
-      df_tbl[["Notes"]] <- ifelse(
-        nchar(full_notes) > 20,
-        paste0("<span title='", gsub("'", "&#39;", full_notes), "'>",
-               substr(full_notes, 1, 20), "&hellip;</span>"),
-        paste0("<span title='", gsub("'", "&#39;", full_notes), "'>", full_notes, "</span>")
+    # Truncate long text columns with tooltip showing full text on hover
+    truncate_col <- function(df_tbl, col, max_chars) {
+      full <- ifelse(is.na(df_tbl[[col]]), "", df_tbl[[col]])
+      ifelse(
+        nchar(full) > max_chars,
+        paste0("<span title='", gsub("'", "&#39;", full), "'>",
+               substr(full, 1, max_chars), "&hellip;</span>"),
+        paste0("<span title='", gsub("'", "&#39;", full), "'>", full, "</span>")
       )
     }
+    if ("Apartment" %in% cols) df_tbl[["Apartment"]] <- truncate_col(df_tbl, "Apartment", 30)
+    if ("Notes"     %in% cols) df_tbl[["Notes"]]     <- truncate_col(df_tbl, "Notes",     20)
     bool_col_indices <- which(cols %in% bool_cols) - 1  # 0-based for JS
     curr_col_indices <- which(cols %in% curr_cols) - 1
     datatable(
