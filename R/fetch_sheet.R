@@ -8,11 +8,15 @@ gs4_auth_sa <- function() {
   sa <- Sys.getenv("GCP_SA_JSON")
   if (nchar(sa) == 0) stop("GCP_SA_JSON environment variable is not set.")
 
-  # Accept either a file path or a raw JSON string
   if (file.exists(sa)) {
+    # Local dev: sa is a file path
     gs4_auth(path = sa)
   } else {
-    gs4_auth(path = jsonlite::fromJSON(sa, simplifyVector = FALSE))
+    # Connect Cloud: sa is the raw JSON string — write to a temp file
+    tmp <- tempfile(fileext = ".json")
+    writeLines(sa, tmp)
+    on.exit(unlink(tmp), add = TRUE)
+    gs4_auth(path = tmp)
   }
 }
 
