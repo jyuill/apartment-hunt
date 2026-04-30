@@ -12,9 +12,17 @@ gs4_auth_sa <- function() {
     # Local dev: sa is a file path
     gs4_auth(path = sa)
   } else {
-    # Connect Cloud: sa is the raw JSON string — write to a temp file
+    # Connect Cloud: sa is the raw JSON string
+    # Strip any surrounding whitespace or accidental outer quotes
+    sa <- trimws(sa)
+    sa <- gsub("^'|'$", "", sa)   # remove surrounding single quotes if any
+
+    # Sanity check — log the type field to help diagnose auth issues
+    type_match <- regmatches(sa, regexpr('"type"\\s*:\\s*"[^"]+"', sa))
+    message("GCP_SA_JSON type field: ", if (length(type_match)) type_match else "NOT FOUND")
+
     tmp <- tempfile(fileext = ".json")
-    writeLines(sa, tmp)
+    cat(sa, file = tmp)
     on.exit(unlink(tmp), add = TRUE)
     gs4_auth(path = tmp)
   }
