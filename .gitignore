@@ -2,7 +2,7 @@
 .Renviron
 
 # Google service account JSON file (if stored locally inside the project)
-*.json
+# use more specific match than *.json
 
 # renv cache and library — keep renv/ but not the local library
 renv/library/
