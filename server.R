@@ -11,7 +11,7 @@ source("R/build_map.R")
 
 # Columns shown in the summary table
 TABLE_COLS <- c("Apartment", "Status", "Rent", "Ttl_Cost", "Value_Cost",
-                "Parking_EV", "Laundry", "Gym", "Storage", "Amenities")
+                "Parking_EV", "Laundry", "Gym", "Storage", "Amenities", "Notes")
 
 server <- function(input, output, session) {
 
@@ -181,11 +181,22 @@ server <- function(input, output, session) {
     for (col in curr_cols) {
       df_tbl[[col]] <- paste0("$", formatC(as.numeric(df_tbl[[col]]), format = "f", digits = 0, big.mark = ","))
     }
+    # Truncate Notes to 20 chars; full text shown on hover via HTML title attribute
+    if ("Notes" %in% cols) {
+      full_notes <- ifelse(is.na(df_tbl[["Notes"]]), "", df_tbl[["Notes"]])
+      df_tbl[["Notes"]] <- ifelse(
+        nchar(full_notes) > 20,
+        paste0("<span title='", gsub("'", "&#39;", full_notes), "'>",
+               substr(full_notes, 1, 20), "&hellip;</span>"),
+        paste0("<span title='", gsub("'", "&#39;", full_notes), "'>", full_notes, "</span>")
+      )
+    }
     bool_col_indices <- which(cols %in% bool_cols) - 1  # 0-based for JS
     curr_col_indices <- which(cols %in% curr_cols) - 1
     datatable(
       df_tbl,
       rownames  = FALSE,
+      escape    = FALSE,
       filter    = "none",
       options   = list(
         pageLength  = 20,

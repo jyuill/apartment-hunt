@@ -100,7 +100,7 @@ build_map <- function(df, size_col = "Ttl_Cost", color_col = "Status", essential
   # Popups
   popup_cols <- intersect(
     c("Apartment", "Status", "Type", "Rent", "Ttl_Cost", "Value_Cost",
-      "Parking_EV", "Laundry", "Gym", "Storage"),
+      "Parking_EV", "Laundry", "Gym", "Storage", "Notes"),
     names(df)
   )
   popups <- vapply(seq_len(n), function(i) {
