@@ -34,7 +34,7 @@ ESSENTIALS_PALETTE <- c(
   "other"      = "#8C8C8C"
 )
 
-build_map <- function(df, size_col = "Ttl_Cost", color_col = "Status", essentials = NULL) {
+build_map <- function(df, size_col = "Ttl_Cost", color_col = "Status", essentials = NULL, zones = NULL) {
 
   if (is.null(df) || nrow(df) == 0) {
     return(leaflet() |> addTiles() |>
@@ -101,7 +101,7 @@ build_map <- function(df, size_col = "Ttl_Cost", color_col = "Status", essential
 
   # Popups
   popup_cols <- intersect(
-    c("Apartment", "Status", "Type", "Rent", "Ttl_Cost", "Value_Cost",
+    c("Apartment", "Address", "Status", "Type", "Rent", "Ttl_Cost", "Value_Cost",
       "Parking_EV", "Laundry", "Gym", "Storage", "Notes"),
     names(df)
   )
@@ -190,6 +190,28 @@ build_map <- function(df, size_col = "Ttl_Cost", color_col = "Status", essential
           title    = "Essentials",
           opacity  = 0.9
         )
+    }
+  }
+
+  # Zones overlay
+  if (!is.null(zones) && nrow(zones) > 0) {
+    req_cols <- c("lat_ne", "lng_ne", "lat_se", "lng_se",
+                  "lat_sw", "lng_sw", "lat_nw", "lng_nw")
+    zones_valid <- zones[rowSums(is.na(zones[, intersect(req_cols, names(zones))])) == 0, ]
+    if (nrow(zones_valid) > 0) {
+      for (i in seq_len(nrow(zones_valid))) {
+        z <- zones_valid[i, ]
+        lats <- c(z$lat_ne, z$lat_se, z$lat_sw, z$lat_nw, z$lat_ne)
+        lngs <- c(z$lng_ne, z$lng_se, z$lng_sw, z$lng_nw, z$lng_ne)
+        m <- m |> addPolylines(
+          lng    = lngs,
+          lat    = lats,
+          color  = "#555555",
+          weight = 2,
+          opacity = 0.8,
+          label  = if ("zone_name" %in% names(z)) z$zone_name else NULL
+        )
+      }
     }
   }
 

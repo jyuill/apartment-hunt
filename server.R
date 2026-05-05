@@ -7,6 +7,7 @@ source("R/fetch_sheet.R")
 source("R/geocode_writeback.R")
 source("R/fetch_essentials.R")
 source("R/geocode_essentials.R")
+source("R/fetch_zones.R")
 source("R/build_map.R")
 
 # Columns shown in the summary table
@@ -156,6 +157,27 @@ server <- function(input, output, session) {
                              selected = svcs)
   }, ignoreNULL = FALSE)
 
+  # ── Fetch + geocode Zones (same reload trigger) ─────────────────────────────
+  zones_data <- eventReactive(input$reload, {
+    req(sheet_id())
+    tryCatch({
+      df <- fetch_zones(sheet_id())
+      if (is.null(df) || nrow(df) == 0) return(NULL)
+      tryCatch(
+        geocode_zones(df, sheet_id()),
+        error = function(e) {
+          showNotification(paste("Zone geocoding error:", conditionMessage(e)),
+                           type = "warning", duration = 15)
+          df
+        }
+      )
+    }, error = function(e) {
+      showNotification(paste("Could not load Zones sheet:", conditionMessage(e)),
+                       type = "warning", duration = 15)
+      NULL
+    })
+  }, ignoreNULL = FALSE)
+
   # ── Map ──────────────────────────────────────────────────────────────────────
   output$map <- renderLeaflet({
     ess <- essentials_data()
@@ -164,8 +186,9 @@ server <- function(input, output, session) {
     } else {
       ess <- NULL
     }
+    zones <- if (isTRUE(input$show_zones)) zones_data() else NULL
     build_map(filtered_data(), size_col = input$size_col, color_col = input$color_col,
-              essentials = ess)
+              essentials = ess, zones = zones)
   })
 
   # ── Table ────────────────────────────────────────────────────────────────────

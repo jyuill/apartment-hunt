@@ -88,6 +88,12 @@ ui <- page_sidebar(
       checkboxInput("filter_amenities", "Amenities",  value = FALSE)
     ),
 
+    # --- Zones overlay ---
+    card(
+      card_header("Zones", class = "bg-light fw-semibold"),
+      checkboxInput("show_zones", "Show priority zones", value = TRUE)
+    ),
+
     # --- Essentials overlay ---
     card(
       card_header("Essentials", class = "bg-light fw-semibold"),
