@@ -3,7 +3,7 @@ Decision support for apartment hunting — a Shiny app that reads apartment list
 
 ## What it does
 
-- **Loads listings from a Google Sheet** — authenticated via a Google OAuth client for local development. The sheet URL can be overridden at runtime by pasting it into the app UI, otherwise the `SHEET_ID` environment variable is used.
+- **Loads listings from a Google Sheet** — authenticated via a user Google OAuth client. The sheet URL can be overridden at runtime by pasting it into the app UI, otherwise the `SHEET_ID` environment variable is used.
 - **Geocodes addresses automatically** — new addresses (rows where `lat`/`lng` are blank) are geocoded via OpenStreetMap using `tidygeocoder`, with ", Vancouver, BC, Canada" appended for accuracy. Results are written back to the `lat` and `lng` columns of the Google Sheet so geocoding only runs for new rows on subsequent loads.
 - **Displays an interactive leaflet map** with markers encoding:
   - **Colour** → `Status` (open=blue, tour=green, msg=amber, unavail=grey, denied=red, reject=dark red)
@@ -12,8 +12,8 @@ Decision support for apartment hunting — a Shiny app that reads apartment list
 - **Filters** in the sidebar:
   - `Status` multi-select (defaults to open/tour/msg)
   - `Type` multi-select (all types selected by default; updates dynamically from sheet values)
-  - Boolean checkboxes for `Parking_EV`, `Laundry`, `Gym`, `Amenities` (when checked, shows only TRUE rows)
-- **Summary table** below the map showing: Apartment, Status, Rent, Ttl_Cost, Parking_EV, Laundry, Gym, Storage — with column-level filtering and pagination via `DT`.
+  - Four boolean `req_1`–`req_4` checkboxes that are mapped at runtime to the boolean columns between `Ttl_Cost` and `Convenience`
+- **Summary table** below the map showing the columns present in the sheet from `Apartment` through `Convenience`, with dynamic boolean formatting and pagination via `DT`.
 
 ## Project structure
 
@@ -49,6 +49,7 @@ The sheet is expected to have headers at **row 8**, with at minimum the followin
 | `Gym` | Boolean — gym available |
 | `Amenities` | Boolean — other amenities present |
 | `Storage` | Storage availability |
+| `Convenience` | Sheet boundary after the boolean requirement columns |
 | `date_created` | Row creation date (used as stable key) |
 | `date_mod` | Last modified date (used to detect changed rows for re-geocoding) |
 
@@ -64,18 +65,15 @@ The sheet is expected to have headers at **row 8**, with at minimum the followin
   clientType=installed
    ```
   If you created a web OAuth client instead, add `clientRedirectUris` with the exact redirect URI(s) registered in Google Cloud Console.
+  If you have multiple Google accounts cached locally, set `GARGLE_OAUTH_EMAIL` to preselect one and skip the chooser.
 2. Restore packages: `renv::restore()`
 3. Run: `shiny::runApp()`
 
-### Posit Connect Cloud (GitHub-based deployment)
+### Deployment
 
-Deployment is triggered automatically on push to `main` via a linked GitHub repo. Before deploying:
+If you deploy the app, use the same user OAuth flow. Each user will authenticate once per session, and the resulting token is reused for all sheet reads/writes during that session.
 
-1. In the Connect Cloud project settings → **Environment Variables**, set:
-   - `SHEET_ID` — bare Google Sheet ID
-  - `GCP_SA_JSON` — contents of the service account JSON as a **single-line string**
-2. Ensure `manifest.json` is up to date: `rsconnect::writeManifest()`
-3. The service account requires read/write access to the Google Sheet (`spreadsheets` scope — not readonly, as the app writes geocoded coordinates back).
+For hosted apps, make sure the OAuth client’s redirect URI matches the deployment URL and that the Google Sheet is shared with the account being used.
 
 ## Dependencies
 

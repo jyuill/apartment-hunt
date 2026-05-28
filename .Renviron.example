@@ -9,8 +9,9 @@ clientSecret=
 # Optional: set to installed or web (default: installed)
 clientType=installed
 
+# Optional: preselect one Google account and avoid the chooser dialog
+# when multiple cached accounts exist.
+# GARGLE_OAUTH_EMAIL=you@example.com
+
 # Optional: only needed for web OAuth clients; comma-separated exact redirect URIs
 # clientRedirectUris=http://localhost:1410/,http://localhost:1410
-
-# Service account JSON is still used for deployed environments only
-GCP_SA_JSON=

@@ -91,10 +91,7 @@ ui <- page_sidebar(
         step  = 100,
         pre   = "$"
       ),
-      checkboxInput("filter_parking", "Parking / EV", value = FALSE),
-      checkboxInput("filter_laundry", "Laundry",      value = FALSE),
-      checkboxInput("filter_gym",     "Gym",          value = FALSE),
-      checkboxInput("filter_amenities", "Amenities",  value = FALSE)
+      uiOutput("boolean_filters_ui")
     ),
 
     # --- Zones overlay ---
