@@ -129,7 +129,7 @@ fetch_sheet <- function(sheet_id) {
   }
 
   # Coerce known numeric columns, stripping currency formatting if present
-  for (col in c("Rent", "Ttl_Cost", "Value_Cost")) {
+  for (col in c("Rent", "Ttl_Cost")) {
     if (col %in% names(df)) {
       df[[col]] <- as.numeric(gsub("[$,]", "", df[[col]]))
     }
