@@ -71,9 +71,18 @@ The sheet is expected to have headers at **row 8**, with at minimum the followin
 
 ### Deployment
 
-If you deploy the app, use the same user OAuth flow. Each user will authenticate once per session, and the resulting token is reused for all sheet reads/writes during that session.
+For Posit Connect Cloud, configure a web OAuth client and set these project variables:
 
-For hosted apps, make sure the OAuth client’s redirect URI matches the deployment URL and that the Google Sheet is shared with the account being used.
+```text
+clientType=web
+clientID=<web_oauth_client_id>
+clientSecret=<web_oauth_client_secret>
+clientRedirectUris=<connect_cloud_redirect_uri>
+```
+
+The redirect URI must match the one registered in Google Cloud Console for the web client. Each viewer authenticates once per session, and the token is reused for all sheet reads and writes during that session.
+
+The Google Sheet must be shared with the Google account used for auth.
 
 ## Dependencies
 

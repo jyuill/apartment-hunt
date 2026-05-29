@@ -1,17 +1,19 @@
 # Google Sheet ID (used when no URL is pasted in the app UI)
 SHEET_ID=your_sheet_id_here
 
-# Local OAuth client for googlesheets4 / gargle
-# For desktop / installed app OAuth, use these two values:
+# Local development: desktop / installed OAuth client
+clientType=installed
 clientID=
 clientSecret=
-
-# Optional: set to installed or web (default: installed)
-clientType=installed
 
 # Optional: preselect one Google account and avoid the chooser dialog
 # when multiple cached accounts exist.
 # GARGLE_OAUTH_EMAIL=you@example.com
 
-# Optional: only needed for web OAuth clients; comma-separated exact redirect URIs
-# clientRedirectUris=http://localhost:1410/,http://localhost:1410
+# Posit Connect Cloud production: web OAuth client
+# clientType=web
+# clientID=your_web_oauth_client_id
+# clientSecret=your_web_oauth_client_secret
+# clientRedirectUris=https://<your-connect-domain>/
+# If your GCP app requires an explicit callback path, use the exact URI
+# registered in Google Cloud Console.
