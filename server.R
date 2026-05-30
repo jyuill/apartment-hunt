@@ -15,6 +15,18 @@ server <- function(input, output, session) {
   public_mode <- use_public_link_mode()
   auth_ready <- reactiveVal(public_mode || googlesheets4::gs4_has_token())
 
+  output$auth_controls_ui <- renderUI({
+    if (public_mode) {
+      return(NULL)
+    }
+    actionButton(
+      "connect_google",
+      "Connect Google Account",
+      icon = icon("google"),
+      class = "btn-outline-primary w-100 mb-2"
+    )
+  })
+
   output$google_auth_status <- renderText({
     if (public_mode) {
       return("Public-link mode (no Google login)")
@@ -25,8 +37,6 @@ server <- function(input, output, session) {
       "Not connected"
     }
   })
-  output$public_link_mode <- reactive({ public_mode })
-  outputOptions(output, "public_link_mode", suspendWhenHidden = FALSE)
 
   observeEvent(input$connect_google, {
     if (public_mode) {

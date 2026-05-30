@@ -2,7 +2,11 @@ library(googlesheets4)
 library(dplyr)
 
 use_public_link_mode <- function() {
-  tolower(trimws(Sys.getenv("PUBLIC_LINK_MODE", unset = "false"))) %in% c("1", "true", "yes", "y")
+  raw <- tolower(trimws(Sys.getenv("PUBLIC_LINK_MODE", unset = "")))
+  if (nchar(raw) == 0) {
+    return(!interactive())
+  }
+  raw %in% c("1", "true", "yes", "y")
 }
 
 decode_oauth_token <- function(x) {
