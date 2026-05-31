@@ -170,7 +170,19 @@ server <- function(input, output, session) {
     req(sheet_id())
     req(ensure_sheet_access(sheet_id()))
     withProgress(message = "Loading sheet...", value = 0.2, {
-      df <- fetch_sheet(sheet_id())
+      df <- tryCatch(
+        fetch_sheet(sheet_id()),
+        error = function(e) {
+          showNotification(
+            paste("Could not load Options sheet:", conditionMessage(e)),
+            type = "error",
+            duration = 12
+          )
+          return(NULL)
+        }
+      )
+      req(!is.null(df))
+
       if (!public_mode) {
         setProgress(0.5, message = "Geocoding new addresses...")
         df <- tryCatch(

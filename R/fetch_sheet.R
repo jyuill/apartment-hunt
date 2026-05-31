@@ -2,6 +2,10 @@ library(googlesheets4)
 library(dplyr)
 
 use_public_link_mode <- function() {
+  if (use_service_account_mode()) {
+    return(FALSE)
+  }
+
   raw <- tolower(trimws(Sys.getenv("PUBLIC_LINK_MODE", unset = "")))
   if (nchar(raw) == 0) {
     return(!interactive())
