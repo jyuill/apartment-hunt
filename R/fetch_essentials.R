@@ -5,6 +5,10 @@ library(googlesheets4)
 #' @param sheet_id Google Sheet ID string.
 #' @return A data frame with Service, Name, Address, lat, lng columns.
 fetch_essentials <- function(sheet_id) {
+  if (use_public_link_mode()) {
+    googlesheets4::gs4_deauth()
+  }
+
   df <- read_sheet(sheet_id, sheet = "Essentials", skip=2, col_types = "c")
 
   # Drop rows where Address is blank

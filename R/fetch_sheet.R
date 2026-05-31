@@ -176,6 +176,10 @@ gs4_auth_user <- function() {
 #' @param sheet_id Google Sheet ID string.
 #' @return A data frame with all columns from the sheet.
 fetch_sheet <- function(sheet_id) {
+  if (use_public_link_mode()) {
+    googlesheets4::gs4_deauth()
+  }
+
   # Headers are at row 8; read from row 8 onward
   sheet_name <- Sys.getenv("SHEET_NAME", unset = NA)
   range_spec  <- if (!is.na(sheet_name) && nchar(sheet_name) > 0) {
