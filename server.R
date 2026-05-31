@@ -12,11 +12,25 @@ source("R/build_map.R")
 
 server <- function(input, output, session) {
 
+  service_mode <- use_service_account_mode()
   public_mode <- use_public_link_mode()
-  auth_ready <- reactiveVal(public_mode || googlesheets4::gs4_has_token())
+  auth_ready <- reactiveVal(public_mode || service_mode || googlesheets4::gs4_has_token())
+  sa_email <- get_service_account_email()
+
+  if (service_mode) {
+    tryCatch(
+      {
+        gs4_auth_user()
+        auth_ready(TRUE)
+      },
+      error = function(e) {
+        auth_ready(FALSE)
+      }
+    )
+  }
 
   output$auth_controls_ui <- renderUI({
-    if (public_mode) {
+    if (public_mode || service_mode) {
       return(NULL)
     }
     actionButton(
@@ -28,6 +42,12 @@ server <- function(input, output, session) {
   })
 
   output$google_auth_status <- renderText({
+    if (service_mode) {
+      if (nchar(sa_email) > 0) {
+        return(paste("Service account mode:", sa_email))
+      }
+      return("Service account mode enabled")
+    }
     if (public_mode) {
       return("Public-link mode (no Google login)")
     }
@@ -39,10 +59,11 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$connect_google, {
-    if (public_mode) {
+    if (public_mode || service_mode) {
       auth_ready(TRUE)
       showNotification(
-        "Public-link mode enabled. Google login is not required.",
+        if (service_mode) "Service account mode enabled. User Google login is not required."
+        else "Public-link mode enabled. Google login is not required.",
         type = "message",
         duration = 5
       )
@@ -107,10 +128,47 @@ server <- function(input, output, session) {
     id
   })
 
+  ensure_sheet_access <- function(id) {
+    if (!service_mode) return(TRUE)
+    access <- check_sheet_access(id)
+    if (isTRUE(access$ok)) return(TRUE)
+
+    showModal(modalDialog(
+      title = "Share sheet with service account",
+      tags$p("This sheet is not yet accessible to the app service account."),
+      if (nchar(sa_email) > 0) {
+        tags$div(
+          tags$strong("Share this sheet as Editor with:"),
+          tags$pre(sa_email)
+        )
+      },
+      tags$p("After sharing, click Retry Access."),
+      tags$p(style = "color:#b22222;", access$message),
+      footer = tagList(
+        modalButton("Close"),
+        actionButton("retry_sheet_access", "Retry Access", class = "btn-primary")
+      ),
+      easyClose = TRUE
+    ))
+    FALSE
+  }
+
+  observeEvent(input$retry_sheet_access, {
+    req(sheet_id())
+    access <- check_sheet_access(sheet_id())
+    if (isTRUE(access$ok)) {
+      removeModal()
+      showNotification("Sheet access granted.", type = "message", duration = 4)
+    } else {
+      showNotification(paste("Still no access:", access$message), type = "warning", duration = 8)
+    }
+  })
+
   # ── Fetch + geocode (triggered by reload button) ─────────────────────────────
   apt_data <- eventReactive(input$reload, {
     req(auth_ready())
     req(sheet_id())
+    req(ensure_sheet_access(sheet_id()))
     withProgress(message = "Loading sheet...", value = 0.2, {
       df <- fetch_sheet(sheet_id())
       if (!public_mode) {
@@ -133,6 +191,7 @@ server <- function(input, output, session) {
   essentials_data <- eventReactive(input$reload, {
     req(auth_ready())
     req(sheet_id())
+    req(ensure_sheet_access(sheet_id()))
     tryCatch({
       df <- fetch_essentials(sheet_id())
       if (is.null(df) || nrow(df) == 0) {
@@ -246,6 +305,7 @@ server <- function(input, output, session) {
   zones_data <- eventReactive(input$reload, {
     req(auth_ready())
     req(sheet_id())
+    req(ensure_sheet_access(sheet_id()))
     tryCatch({
       df <- fetch_zones(sheet_id())
       if (is.null(df) || nrow(df) == 0) return(NULL)

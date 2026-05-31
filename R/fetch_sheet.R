@@ -9,6 +9,57 @@ use_public_link_mode <- function() {
   raw %in% c("1", "true", "yes", "y")
 }
 
+use_service_account_mode <- function() {
+  raw <- tolower(trimws(Sys.getenv("SERVICE_ACCOUNT_MODE", unset = "false")))
+  raw %in% c("1", "true", "yes", "y")
+}
+
+get_service_account_email <- function() {
+  sa_email <- trimws(Sys.getenv("SERVICE_ACCOUNT_EMAIL", unset = ""))
+  if (nchar(sa_email) > 0) return(sa_email)
+
+  sa_value <- trimws(Sys.getenv("GCP_SA_JSON", unset = ""))
+  if (nchar(sa_value) == 0) return("")
+
+  parse_email <- function(x, is_path = FALSE) {
+    tryCatch(
+      {
+        payload <- if (is_path) jsonlite::fromJSON(x) else jsonlite::fromJSON(txt = x)
+        if (!is.null(payload$client_email)) as.character(payload$client_email) else ""
+      },
+      error = function(e) ""
+    )
+  }
+
+  if (grepl("^\\s*\\{", sa_value)) {
+    return(parse_email(sa_value, is_path = FALSE))
+  }
+
+  if (file.exists(sa_value)) {
+    return(parse_email(sa_value, is_path = TRUE))
+  }
+
+  ""
+}
+
+gs4_auth_service_account <- function() {
+  sa_value <- trimws(Sys.getenv("GCP_SA_JSON", unset = ""))
+  if (nchar(sa_value) == 0) {
+    stop("GCP_SA_JSON must be set when SERVICE_ACCOUNT_MODE=true.")
+  }
+
+  if (grepl("^\\s*\\{", sa_value)) {
+    json_path <- tempfile(fileext = ".json")
+    writeLines(sa_value, json_path, useBytes = TRUE)
+    on.exit(unlink(json_path), add = TRUE)
+    googlesheets4::gs4_auth(path = json_path, cache = FALSE)
+  } else {
+    googlesheets4::gs4_auth(path = sa_value, cache = FALSE)
+  }
+
+  invisible(TRUE)
+}
+
 decode_oauth_token <- function(x) {
   tryCatch(
     {
@@ -112,6 +163,11 @@ sheet_as_flag <- function(x) {
 #' If `GARGLE_OAUTH_EMAIL` is set, it will be used to preselect a cached Google
 #' account and avoid the account chooser when multiple identities are available.
 gs4_auth_user <- function() {
+  if (use_service_account_mode()) {
+    gs4_auth_service_account()
+    return(invisible(TRUE))
+  }
+
   if (use_public_link_mode()) {
     googlesheets4::gs4_deauth()
     return(invisible(TRUE))
@@ -169,6 +225,18 @@ gs4_auth_user <- function() {
   } else {
     gs4_auth(email = email_arg, use_oob = use_oob, cache = FALSE)
   }
+}
+
+check_sheet_access <- function(sheet_id) {
+  tryCatch(
+    {
+      googlesheets4::sheet_properties(sheet_id)
+      list(ok = TRUE, message = "Access granted.")
+    },
+    error = function(e) {
+      list(ok = FALSE, message = conditionMessage(e))
+    }
+  )
 }
 
 #' Read the apartment listings sheet.

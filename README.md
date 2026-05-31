@@ -81,6 +81,20 @@ SHEET_NAME=<tab_name_optional>
 
 In this mode, the app reads sheets without user OAuth and skips writeback operations. Ensure the target sheets are shared for reading by link.
 
+### Deployment with real-time writeback (service account)
+
+If you need geocode writeback in hosted mode, enable service-account mode and set:
+
+```text
+SERVICE_ACCOUNT_MODE=true
+SERVICE_ACCOUNT_EMAIL=<service_account_email>
+GCP_SA_JSON=<single-line-service-account-json>
+SHEET_ID=<default_sheet_id_optional>
+SHEET_NAME=<tab_name_optional>
+```
+
+In this mode, the app checks access for the pasted sheet and, if needed, shows an onboarding modal telling the user to share the sheet with the service account as Editor. After sharing, users click Retry Access and continue without restarting the app.
+
 ## Dependencies
 
 Key packages: `shiny`, `bslib`, `leaflet`, `DT`, `googlesheets4`, `gargle`, `tidygeocoder`, `dplyr`, `scales`, `jsonlite`, `rsconnect`. All pinned in `renv.lock`.

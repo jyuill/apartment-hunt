@@ -1,6 +1,13 @@
 # Google Sheet ID (used when no URL is pasted in the app UI)
 SHEET_ID=your_sheet_id_here
 
+# Service-account mode for real-time writeback in hosted deployments.
+# When true, app authenticates using GCP_SA_JSON and users must share
+# their sheets with SERVICE_ACCOUNT_EMAIL (Editor access).
+# SERVICE_ACCOUNT_MODE=true
+# SERVICE_ACCOUNT_EMAIL=your-service-account@your-project.iam.gserviceaccount.com
+# GCP_SA_JSON={...single-line-json...}
+
 # Set to true to run in public-link mode (no Google OAuth in app).
 # The target sheet/tab must be shared appropriately for public reading.
 # PUBLIC_LINK_MODE=true
