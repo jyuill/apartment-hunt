@@ -1,5 +1,6 @@
 # Google Sheet ID (used when no URL is pasted in the app UI)
 SHEET_ID=your_sheet_id_here
+SHEET_NAME=sheet_with_listings
 
 # Service-account mode for real-time writeback in hosted deployments.
 # When true, app authenticates using GCP_SA_JSON and users must share

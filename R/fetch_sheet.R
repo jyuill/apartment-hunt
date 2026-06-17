@@ -145,6 +145,7 @@ sheet_table_cols <- function(df) {
   }
 
   exclude <- c("convenience", "ttl_conditions", "added_value", "lat", "lng", "link", "heat")
+  # ignore cols that have heading with 'req' in text
   cols <- cols[!grepl("req", cols, ignore.case = TRUE)]
   cols <- cols[!tolower(cols) %in% exclude]
   cols <- cols[cols %in% names(df)]
@@ -252,14 +253,15 @@ fetch_sheet <- function(sheet_id) {
     googlesheets4::gs4_deauth()
   }
 
-  # Headers are at row 8; read from row 8 onward
+  # Headers are at row 10; read from row 10 onward
+  # - specified below in ul=c(x,1) or else x:10000
   sheet_name <- Sys.getenv("SHEET_NAME", unset = NA)
   range_spec  <- if (!is.na(sheet_name) && nchar(sheet_name) > 0) {
     googlesheets4::cell_limits(
-      ul = c(8, 1), lr = c(NA, NA), sheet = sheet_name
+      ul = c(10, 1), lr = c(NA, NA), sheet = sheet_name
     )
   } else {
-    "8:10000"
+    "10:10000"
   }
   df <- read_sheet(sheet_id, range = range_spec, col_types = "c")
 

@@ -33,7 +33,11 @@ apartment-hunt/
 
 ## Google Sheet schema
 
-The sheet is expected to have headers at **row 8**, with at minimum the following columns:
+Fetching is handled via fetch_sheet.R
+- sheet name for main listings sheet is specified in env vars.
+- headers are expected at row 10; set in fetch_sheet.R, range_spec (ln 259)
+
+The sheet is expected to have headers at **row 10**, with at minimum the following columns:
 
 | Column | Description |
 |---|---|
@@ -44,22 +48,27 @@ The sheet is expected to have headers at **row 8**, with at minimum the followin
 | `Type` | Unit type: `studio`, `1 bdrm`, etc. |
 | `Rent` | Monthly rent (numeric or currency-formatted) |
 | `Ttl_Cost` | Total monthly cost (numeric or currency-formatted) |
-| `Parking_EV` | Boolean — EV parking available |
-| `Laundry` | Boolean — in-suite or in-building laundry |
-| `Gym` | Boolean — gym available |
-| `Amenities` | Boolean — other amenities present |
-| `Storage` | Storage availability |
+| `main requiremments (up to 4)` | Boolean |
 | `Convenience` | Sheet boundary after the boolean requirement columns |
+| `secondary requirements (up to 4)` | Boolean |
+| `Value_Cost`| numeric value representing value relative to ttl cost |
+| `Notes` | comments on the listing |
+| `Link` | url for listing |
 | `date_created` | Row creation date (used as stable key) |
 | `date_mod` | Last modified date (used to detect changed rows for re-geocoding) |
 
 ## Setup
+
+- ensure sheet range used matches header rows of main sheet (Prospects):
+  - fetch_sheet.R > range_spec (ln 259)
+  - geocode_writeback.R > gs4_range_col (ln 91)
 
 ### Local development
 
 1. Copy `.Renviron.example` to `.Renviron` and fill in:
    ```
    SHEET_ID=<your_google_sheet_id>
+   SHEET_NAME=<name of main listings sheet>
   clientID=<oauth_client_id>
   clientSecret=<oauth_client_secret>
   clientType=installed

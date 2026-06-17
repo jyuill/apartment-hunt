@@ -86,9 +86,9 @@ geocode_writeback <- function(df, sheet_id) {
 #'
 #' @param col_index  1-based column index.
 #' @param n_rows     Number of data rows (excluding header).
-#' @param header_row Row number of the header (default 8).
-#' @return A1 range string, e.g. "E9:E58"
-gs4_range_col <- function(col_index, n_rows, header_row = 8) {
+#' @param header_row Row number of the header (default 10).
+#' @return A1 range string, e.g. "E11:E60"
+gs4_range_col <- function(col_index, n_rows, header_row = 10) {
   col_letter <- function(n) {
     s <- ""
     while (n > 0) {

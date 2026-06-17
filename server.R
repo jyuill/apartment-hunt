@@ -174,7 +174,7 @@ server <- function(input, output, session) {
         fetch_sheet(sheet_id()),
         error = function(e) {
           showNotification(
-            paste("Could not load Options sheet:", conditionMessage(e)),
+            paste("Could not load Prospects sheet:", conditionMessage(e)),
             type = "error",
             duration = 12
           )
