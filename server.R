@@ -52,7 +52,7 @@ server <- function(input, output, session) {
       return("Public-link mode (no Google login)")
     }
     if (auth_ready() && googlesheets4::gs4_has_token()) {
-      paste("Connected as", googlesheets4::gs4_user())
+      paste("Connected as:", googlesheets4::gs4_user())
     } else {
       "Not connected"
     }

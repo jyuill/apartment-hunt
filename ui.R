@@ -49,7 +49,10 @@ ui <- page_sidebar(
         placeholder = "Paste Sheet URL or sheet ID (optional)"
       ),
       uiOutput("auth_controls_ui"),
-      textOutput("google_auth_status"),
+      tags$div(
+        style = "font-size: 0.86rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin-top: 0.1rem;",
+        textOutput("google_auth_status")
+      ),
       actionButton("reload", "Load / Reload", icon = icon("rotate"),
                    class = "btn-primary w-100")
     ),
