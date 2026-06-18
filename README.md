@@ -1,9 +1,11 @@
 # Apartment Hunter app
 Decision support for apartment hunting — a Shiny web app that reads apartment listings from a Google Sheet, geocodes addresses, and displays them on an interactive map with filtering and colour/shape encoding based on listing attributes.
 
-Published on Posit Connect Cloud. [go.fig4.com/apt-hunt]
+Published on Posit Connect Cloud. [go.fig4.com/apt-hunt](https://go.fig4com/apt-hunt)
 
 ## What it does
+
+Provides interactive web interface for keeping track of apartment listings, their attributes, and their locations, using map, tables, filters. Works from underlying Google Sheets data source.
 
 - **Loads listings from a Google Sheet** — in public-link mode (recommended for Connect Cloud), no Google login is required in the app. The sheet URL can be overridden at runtime by pasting it into the app UI, otherwise the `SHEET_ID` environment variable is used.
 - **Template onboarding link** — optionally show a "Get Template Sheet" link in the sidebar by setting `TEMPLATE_SHEET_URL` (and optional `TEMPLATE_SHEET_LABEL`).
