@@ -105,13 +105,42 @@ build_map <- function(df, size_col = "Ttl_Cost", color_col = "Status", essential
       "Parking_EV", "Laundry", "Gym", "Storage", "Notes"),
     names(df)
   )
+
+  escape_html <- function(x) {
+    x <- ifelse(is.na(x), "", as.character(x))
+    x <- gsub("&", "&amp;", x, fixed = TRUE)
+    x <- gsub("<", "&lt;", x, fixed = TRUE)
+    x <- gsub(">", "&gt;", x, fixed = TRUE)
+    x <- gsub('"', "&quot;", x, fixed = TRUE)
+    x <- gsub("'", "&#39;", x, fixed = TRUE)
+    x
+  }
+
   popups <- vapply(seq_len(n), function(i) {
-    rows_html <- paste0(
-      "<tr><td><b>", popup_cols, "</b></td><td>&nbsp;",
-      df[i, popup_cols], "</td></tr>",
-      collapse = ""
-    )
-    paste0("<table style='font-size:12px'>", rows_html, "</table>")
+    rows_html <- vapply(popup_cols, function(col_name) {
+      cell_value <- escape_html(df[[col_name]][i])
+      paste0(
+        "<tr><td><b>", escape_html(col_name), "</b></td><td>&nbsp;",
+        cell_value, "</td></tr>"
+      )
+    }, character(1))
+
+    if ("Link" %in% names(df)) {
+      link_val <- ifelse(is.na(df[["Link"]][i]), "", as.character(df[["Link"]][i]))
+      if (nchar(trimws(link_val)) > 0) {
+        href <- escape_html(link_val)
+        rows_html <- c(
+          rows_html,
+          paste0(
+            "<tr><td><b>Link</b></td><td>&nbsp;",
+            "<a href=\"", href, "\" target=\"_blank\" rel=\"noopener noreferrer\">Link</a>",
+            "</td></tr>"
+          )
+        )
+      }
+    }
+
+    paste0("<table style='font-size:12px'>", paste0(rows_html, collapse = ""), "</table>")
   }, character(1))
 
   type_legend_html <- paste0(
